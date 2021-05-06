@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2021/5/06 17:48
+# @Time    : 2020/6/19 17:48
 # @Author  : SwordLight
 # @File    : analyse.py
 import copy
@@ -8,6 +8,7 @@ from pprint import pprint
 from urllib.parse import urlparse
 
 from config import HEADER, PAYLOAD_CHARS
+from core.parser import HtmlParser
 from core.requester import requester
 from logger import logger
 from utils import get_query_dict, get_url, gen_scout_str, gen_check_str, get_valid_paths
@@ -16,7 +17,7 @@ from utils import get_query_dict, get_url, gen_scout_str, gen_check_str, get_val
 1.找到需要替换的参数
 2.生成随机字符替换参数来发起请求，拿到响应后得到上下文(属性、js、css
 3.依据上下文进行尝试得到该上下文可用的用于达到执行js的符号，进行有效性评分
-
+4.
 '''
 
 def analyse(url, GET, data=None, PATH=False):
@@ -41,33 +42,35 @@ def analyse(url, GET, data=None, PATH=False):
             scout_params[param] = scout_str
             resp = requester(url, data=scout_params, headers=HEADER, GET=GET, delay=0, timeout=30)
         text = resp.text
+        parser=HtmlParser(target=scout_str)
+        parser.feed(text)
         # print(text)
-        msg = []
-        positions = []  # 记录每个param出现的位置
-        for match in re.finditer(scout_str, text):
-            positions.append(match.span())  # (31962, 31968)
-
-        print(scout_str)
-
-        parts = text.split(scout_str)
-        parts.remove(parts[0])
-
-        for i in range(len(parts)):
-            seed = parts[i].split('</')
-            seed2 = parts[i].split(">")
-            if len(seed) == 1:
-                seed = parts[i].split('/>')
-            print("seed:", len(seed), "\n", seed, )
-            if seed[1].lower().find('script>') == 0:
-                context = 'script'
-            elif seed[1].lower().find('style>') == 0:
-                context = 'css'
-            elif '"' in seed2[0]:
-                context = "attr"
-            else:
-                context = "html"
-            msg.append({'position': positions[i], 'context': context})
-        param_msg.update({param: msg})
+        # msg = []
+        # positions = []  # 记录每个param出现的位置
+        # for match in re.finditer(scout_str, text):
+        #     positions.append(match.span())  # (31962, 31968)
+        #
+        # print(scout_str)
+        #
+        # parts = text.split(scout_str)
+        # parts.remove(parts[0])
+        #
+        # for i in range(len(parts)):
+        #     seed = parts[i].split('</')
+        #     seed2 = parts[i].split(">")
+        #     if len(seed) == 1:
+        #         seed = parts[i].split('/>')
+        #     print("seed:", len(seed), "\n", seed, )
+        #     if seed[1].lower().find('script>') == 0:
+        #         context = 'script'
+        #     elif seed[1].lower().find('style>') == 0:
+        #         context = 'css'
+        #     elif '"' in seed2[0]:
+        #         context = "attr"
+        #     else:
+        #         context = "html"
+        #     msg.append({'position': positions[i], 'context': context})
+        param_msg.update({param: parser.context})
     logger.info("param_msg:%s", str(param_msg))
     get_effective_chars(url, data, GET, param_msg)
 
@@ -95,14 +98,17 @@ def get_effective_chars(url, data, GET, msg):
                     logger.info('check_params:%s', check_params)
                     resp = requester(url, data=check_params, GET=GET, headers=HEADER, delay=0, timeout=30)
                 text = resp.text
+                text_list=text.split('\n')
                 # print(text)
-                start = msg[key][i]['position'][0] - 10
+                start_lineno = msg[key][i]['start_position'][0]
                 try:
-                    end = msg[key][i + 1]['position'][1] + 10
-                except IndexError:
-                    end = len(text)
-                # res=re.search(check_str,text[start:end])
-                res = text[start:end].find(check_str)  # 由于字符串变量中的某些字符会转义，故无法用正则
+                    end_lineno=msg[key][i]['end_position'][0]
+                except KeyError:
+                    end_lineno=start_lineno
+                target_zone='\n'.join(text_list[start_lineno-1:end_lineno])
+
+                print("target_zone:",target_zone)
+                res = target_zone.find(check_str)  # 由于字符串变量中的某些字符会转义，故无法用正则
                 if res != -1:
                     avoilable_char.append(check_char)
                     score += 1
@@ -114,5 +120,7 @@ def get_effective_chars(url, data, GET, msg):
 
 if __name__ == '__main__':
     data = {"city": 'hi', 'keyword': 'hi'}
-    # analyse('https://hr.sf-express.com/jobMainHandlerT/main/JAVA&9999', GET=True, data=None, PATH=True)
-    analyse('https://www.vivo.com.cn/search?q="CbL9bb',GET=True)
+    analyse('https://hr.sf-express.com/jobMainHandlerT/main/JAVA&9999', GET=True, data=None, PATH=True)
+    # analyse('http://127.0.0.1/Less-1/?id=1', GET=True, data=None, PATH=False)
+    # analyse('http://127.0.0.1/xss/xss_context.php?q=1&w=2&e=3&r=4&t=5', GET=True, data=None, PATH=False)
+    # analyse('https://www.vivo.com.cn/search?q="CbL9bb',GET=True)

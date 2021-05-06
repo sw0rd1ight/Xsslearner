@@ -7,4 +7,4 @@ HEADER = {
     "Cookie": "security=low; PHPSESSID=4vohc8becnbkgusij602lm1ro1",
     "Connection": "close"}
 
-PAYLOAD_CHARS = {"script": ["<", ">"], "attr": ["<>", '"', "."], "html": ["<>", "<", ">"], "css": ["expression", "."]}
+PAYLOAD_CHARS = {"script": ["<", ">"], "attr": ["<>", '"', "."], "html": ["<>", "<", ">"], "css": ["expression", "."],"comment": ["-->","--!>"]}
