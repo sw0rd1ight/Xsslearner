@@ -120,7 +120,7 @@ def get_effective_chars(url, data, GET, msg):
 
 if __name__ == '__main__':
     data = {"city": 'hi', 'keyword': 'hi'}
-    analyse('https://hr.sf-express.com/jobMainHandlerT/main/JAVA&9999', GET=True, data=None, PATH=True)
-    # analyse('http://127.0.0.1/Less-1/?id=1', GET=True, data=None, PATH=False)
+    # analyse('https://hr.sf-express.com/jobMainHandlerT/main/JAVA&9999', GET=True, data=None, PATH=True)
+    analyse('http://px1624.sinaapp.com/test/xsstest3/?px=123', GET=True, data=None, PATH=False)
     # analyse('http://127.0.0.1/xss/xss_context.php?q=1&w=2&e=3&r=4&t=5', GET=True, data=None, PATH=False)
     # analyse('https://www.vivo.com.cn/search?q="CbL9bb',GET=True)

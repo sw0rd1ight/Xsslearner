@@ -7,4 +7,18 @@ HEADER = {
     "Cookie": "security=low; PHPSESSID=4vohc8becnbkgusij602lm1ro1",
     "Connection": "close"}
 
-PAYLOAD_CHARS = {"script": ["<", ">"], "attr": ["<>", '"', "."], "html": ["<>", "<", ">"], "css": ["expression", "."],"comment": ["-->","--!>"]}
+PAYLOAD_CHARS = {"script": ["<", ">", "'", '"'], "attr": ["<>", '"', "."], "html": ["<>", "<", ">"],
+                 "css": ["expression", "."], "comment": ["-->", "--!>"]}
+
+PAYLOAD_CHARS_ = {
+    "script": {"breaker": {";": 10, },
+               "exploiter": {".","()","[]","/"}},
+    "html": {"breaker": {">": 10, "<": 10},
+             "exploiter": {}},
+    "attr": {"breaker": {"'": 10, '"': 10},
+             "exploiter": {}},
+    "css": {"breaker": {">": 10}, "exploiter": {}},
+    "comment": {"breaker": {"-->": 10, "--!>": 10},
+                "exploiter": {}},
+
+}
