@@ -36,11 +36,11 @@ class HtmlParser(HTMLParser):
         for k, v in attrs:
             if self.target in v:
                 if k == "style" or tag == 'style':
-                    self.context.append({"context": "css", "tag":tag,"start_position": self.getpos()})
+                    self.context.append({"context": "css", "sp":tag,"start_position": self.getpos()})
                 elif k.startswith("on"):
-                    self.context.append({"context": "script", "start_position": self.getpos()})
+                    self.context.append({"context": "script","sp":k,"start_position": self.getpos()})
                 else:
-                    self.context.append({"context": "attr", "start_position": self.getpos()})
+                    self.context.append({"context": "attr", "sp":k,"start_position": self.getpos()})
 
 
     def handle_endtag(self, tag):
@@ -62,9 +62,9 @@ class HtmlParser(HTMLParser):
 
         if self.target in data:
             if self.lasttag == 'script':
-                self.context.append({"context": "script", "start_position": self.getpos()})
+                self.context.append({"context": "script", "sp":self.lasttag,"start_position": self.getpos()})
             else:
-                self.context.append({"context": "html", "start_position": self.getpos()})
+                self.context.append({"context": "html","sp":self.lasttag, "start_position": self.getpos()})
 
     def handle_comment(self, data):
         '''
@@ -77,7 +77,7 @@ class HtmlParser(HTMLParser):
             self.context[-1].update({"end_position": self.getpos()})
 
         if self.target in data:
-            self.context.append({"context": "comment", "start_position": self.getpos()})
+            self.context.append({"context": "comment", "sp":"","start_position": self.getpos()})
 
 
 if __name__ == "__main__":

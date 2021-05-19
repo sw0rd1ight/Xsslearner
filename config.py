@@ -11,14 +11,17 @@ PAYLOAD_CHARS = {"script": ["<", ">", "'", '"'], "attr": ["<>", '"', "."], "html
                  "css": ["expression", "."], "comment": ["-->", "--!>"]}
 
 PAYLOAD_CHARS_ = {
-    "script": {"breaker": {";": 10, },
-               "exploiter": {".","()","[]","/"}},
-    "html": {"breaker": {">": 10, "<": 10},
-             "exploiter": {}},
+    "script": {"breaker": {";": 10,'"':5,"'":5},
+               "exploiter": {".", "()", "[]", "/", "="}},
+    "html": {"breaker": {">": 10, "</": 10},
+             "exploiter": {".", "()", "[]", "/", "="}},
     "attr": {"breaker": {"'": 10, '"': 10},
-             "exploiter": {}},
-    "css": {"breaker": {">": 10}, "exploiter": {}},
+             "exploiter": {".", "()", "[]", "/", "="}},
+    "css": {"breaker": {"expression(": 10,"'":10,'"':10}, "exploiter": { "[]", "/", "="}},
     "comment": {"breaker": {"-->": 10, "--!>": 10},
-                "exploiter": {}},
-
+                "exploiter": {".", "()", "[]", "/", "="}},
 }
+
+
+BAD_TAGS = ('iframe', 'title', 'textarea', 'noembed',
+            'template', 'noscript')

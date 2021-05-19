@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 
 from config import HEADER, PAYLOAD_CHARS
 from core.requester import requester
-from logger import logger
+import log
 from utils import get_query_dict, get_url, gen_scout_str, gen_check_str, get_valid_paths
 
 '''
@@ -18,7 +18,7 @@ from utils import get_query_dict, get_url, gen_scout_str, gen_check_str, get_val
 3.依据上下文进行尝试得到该上下文可用的用于达到执行js的符号，进行有效性评分
 
 '''
-
+logger = log.setup_logger()
 def analyse(url, GET, data=None, PATH=False):
     param_msg = {}  # 用于收集各个参数 对应的 context,position信息
     if GET:
