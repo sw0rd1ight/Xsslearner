@@ -14,7 +14,7 @@ parser.add_argument("--path", help="Params in url")
 # parser 参数中的双引号需要使用\转义
 parser.add_argument("--data", help="Use Post method to send the data(dict)", type=str) #{\"searchFor\":\"hi\",\"goButton\":\"go\"}
 args = parser.parse_args()
-logger.info(str(args))
+
 
 if args.data:  # 有额外的dict data 则是post
     url, GET, data, PATH = args.url, False, json.loads(args.data), False

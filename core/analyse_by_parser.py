@@ -18,7 +18,7 @@ from utils import get_query_dict, get_url, gen_scout_str, gen_check_str, get_val
 4.
 '''
 
-logger = log.setup_logger()
+logger = log.setup_logger(__name__)
 def analyse(url, GET, data=None, PATH=False):
     param_msg = {}  # 用于收集各个参数 对应的 context,position信息
     if GET:
@@ -116,8 +116,7 @@ def get_effective_chars(url, data, GET, msg):
                     score += 1
 
             msg[key][i].update({'breakers': breakers, "exploiter":exploiters,'score': score})
-
-    logger.debug_json(str(msg))
+    logger.good(str(msg))
 
 
 # if __name__ == '__main__':
