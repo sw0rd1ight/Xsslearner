@@ -12,15 +12,17 @@ PAYLOAD_CHARS = {"script": ["<", ">", "'", '"'], "attr": ["<>", '"', "."], "html
 
 PAYLOAD_CHARS_ = {
     "script": {"breaker": {";": 10,'"':5,"'":5},
-               "exploiter": {".", "()", "[]", "/", "="}},
+               "exploiter": {".":1, "()":1, "[]":1, "/":1, "=":1}},
     "html": {"breaker": {">": 10, "</": 10},
-             "exploiter": {".", "()", "[]", "/", "="}},
+             "exploiter": {".":1, "()":1, "[]":1, "/":1, "=":1}},
     "attr": {"breaker": {"'": 10, '"': 10},
-             "exploiter": {".", "()", "[]", "/", "="}},
-    "css": {"breaker": {"expression(": 10,"'":10,'"':10}, "exploiter": { "[]", "/", "="}},
+             "exploiter": {".":1, "()":1, "[]":1, "/":1, "=":1}},
+    "css": {"breaker": {"expression(": 10,"'":10,'"':10}, "exploiter": { "[]":1, "/":1, "=":1}},
     "comment": {"breaker": {"-->": 10, "--!>": 10},
-                "exploiter": {".", "()", "[]", "/", "="}},
+                "exploiter": {".":1, "()":1, "[]":1, "/":1, "=":1}},
 }
+
+
 
 
 BAD_TAGS = ('iframe', 'title', 'textarea', 'noembed',

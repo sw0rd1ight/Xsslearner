@@ -5,7 +5,7 @@
 import time
 import requests
 
-def requester(url,data,headers,GET,delay,timeout):
+def requester(url,data,headers,GET,delay,timeout=60):
     time.sleep(delay)
     if GET:
         resp=requests.get(url=url,params=data,headers=headers,timeout=timeout)

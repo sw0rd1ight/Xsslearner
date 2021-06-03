@@ -131,7 +131,7 @@ def _get_level_and_log(self, msg, level):
         self.info(msg)
 
 
-def log_red_line(self, amount=60, level='INFO'):
+def log_red_line(self, amount=130, level='INFO'):
     _switch_to_no_format_loggers(self)
     _get_level_and_log(self, red + ('-' * amount) + end, level)
     _switch_to_default_loggers(self)

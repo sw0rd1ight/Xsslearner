@@ -6,8 +6,14 @@ import argparse
 import json
 from core.analyse_by_parser import analyse
 import log
+from core.colors import red, white, end
+
 logger = log.setup_logger()
 # if __name__ == "__main__":
+
+print('''%s
+\tXSSLearner %sv1.0.0
+%s''' % (red, white, end))
 parser = argparse.ArgumentParser()
 parser.add_argument("-u", "--url", required=True, help="Target url")
 parser.add_argument("--path", help="Params in url")
