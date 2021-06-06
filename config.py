@@ -11,19 +11,22 @@ PAYLOAD_CHARS = {"script": ["<", ">", "'", '"'], "attr": ["<>", '"', "."], "html
                  "css": ["expression", "."], "comment": ["-->", "--!>"]}
 
 PAYLOAD_CHARS_ = {
-    "script": {"breaker": {";": 10,'"':5,"'":5},
-               "exploiter": {".":1, "()":1, "[]":1, "/":1, "=":1}},
+    "script": {"breaker": {";": 10, '"': 5, "'": 5},
+               "exploiter": {".": 1, "()": 1, "[]": 1, "/": 1, "=": 1}},
     "html": {"breaker": {">": 10, "</": 10},
-             "exploiter": {".":1, "()":1, "[]":1, "/":1, "=":1}},
+             "exploiter": {".": 1, "()": 1, "[]": 1, "/": 1, "=": 1}},
     "attr": {"breaker": {"'": 10, '"': 10},
-             "exploiter": {".":1, "()":1, "[]":1, "/":1, "=":1}},
-    "css": {"breaker": {"expression(": 10,"'":10,'"':10}, "exploiter": { "[]":1, "/":1, "=":1}},
+             "exploiter": {".": 1, "()": 1, "[]": 1, "/": 1, "=": 1}},
+    "css": {"breaker": {"expression(": 10, "'": 10, '"': 10}, "exploiter": {"[]": 1, "/": 1, "=": 1}},
     "comment": {"breaker": {"-->": 10, "--!>": 10},
-                "exploiter": {".":1, "()":1, "[]":1, "/":1, "=":1}},
+                "exploiter": {"<":1,"/>":1,".": 1, "()": 1, "[]": 1, "/": 1, "=": 1}},
 }
 
-
-
+PROXIES = {'http': 'http://0.0.0.0:8080', 'https': 'https://0.0.0.0:8080'}
 
 BAD_TAGS = ('iframe', 'title', 'textarea', 'noembed',
             'template', 'noscript')
+
+defaultEditor = 'nano'
+BREAKER_THRESHOLD=10
+

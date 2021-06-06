@@ -6,7 +6,7 @@ import copy
 from pprint import pprint
 from urllib.parse import urlparse
 
-from config import HEADER, PAYLOAD_CHARS, PAYLOAD_CHARS_
+from config import HEADER, PAYLOAD_CHARS, PAYLOAD_CHARS_, BREAKER_THRESHOLD
 from core.parser import HtmlParser
 from core.requester import requester
 import log
@@ -22,8 +22,10 @@ from utils import get_query_dict, get_url, gen_scout_str, gen_check_str, get_val
 logger = log.setup_logger(__name__)
 
 
-def analyse(url, GET, data=None, PATH=False):
+def analyse(url, GET, data=None, PATH=False,header=HEADER):
     param_msg = {}  # 用于收集各个参数 对应的 context,position信息
+    # 输入：GET、PATH\url\data
+    # 明确 要请求的参数data,以及请求的url
     if GET:
         if PATH:  # 从url路径中取要替换的成分
             data = get_valid_paths(url)
@@ -35,6 +37,7 @@ def analyse(url, GET, data=None, PATH=False):
                 query = url_parse_result.path.split("/")[-1]
             data = get_query_dict(query)  # 参数键值对
             url = get_url(url, GET)  # request库中url和参数是分开传参的，故得到没有参数的url
+    # 对于post data就是data
 
     for param in data:
 
@@ -43,10 +46,11 @@ def analyse(url, GET, data=None, PATH=False):
         if PATH:  # 对于url路径参数
             repace_url = url  # 防止一个url被替换多次，故不改变原始url
             repace_url = repace_url.replace(param, scout_str)
-            resp = requester(repace_url, headers=HEADER, data=None, GET=GET, delay=0, timeout=30)
+            resp = requester(repace_url, headers=header, data=None, GET=GET, delay=0, timeout=30)
         else:  # 对于get ,post参数
             scout_params[param] = scout_str
-            resp = requester(url, data=scout_params, headers=HEADER, GET=GET, delay=0, timeout=30)
+            resp = requester(url, data=scout_params, headers=header, GET=GET, delay=0, timeout=30)
+
         text = resp.text
         parser = HtmlParser(target=scout_str)
         parser.feed(text)
@@ -55,12 +59,11 @@ def analyse(url, GET, data=None, PATH=False):
 
         param_msg.update({param: parser.context})
     # logger.info("param_msg:%s" % str(param_msg))
-    get_effective_chars(url, data, GET, param_msg)
+    get_effective_chars(url, data, GET, param_msg,header=header)
 
 
-def estimate_payload_char(payload_chars, chars_type, url, data, test_param, context_info, GET):
+def estimate_payload_char(payload_chars, chars_type, url, data, test_param, context_info, GET,header):
     '''
-
     :param payload_chars: 用于尝试的payload字符
     :param chars_type:区分是breakers 或  exploiter
     :param url:
@@ -77,11 +80,11 @@ def estimate_payload_char(payload_chars, chars_type, url, data, test_param, cont
         if isinstance(data, list):  # 路径处理
             repace_url = url  # 防止一个url被替换多次
             repace_url = repace_url.replace(test_param, check_str)
-            resp = requester(repace_url, data=None, GET=GET, headers=HEADER, delay=0, timeout=30)
+            resp = requester(repace_url, data=None, GET=GET, headers=header, delay=0, timeout=30)
         else:
             check_params = copy.deepcopy(data)
             check_params[test_param] = check_str
-            resp = requester(url, data=check_params, GET=GET, headers=HEADER, delay=0, timeout=30)
+            resp = requester(url, data=check_params, GET=GET, headers=header, delay=0, timeout=30)
         text = resp.text
         text_list = text.split('\n')
         start_lineno = context_info['start_position'][0]
@@ -99,7 +102,7 @@ def estimate_payload_char(payload_chars, chars_type, url, data, test_param, cont
 
 
 # PATH 的话data会是一个list
-def get_effective_chars(url, data, GET, msg):
+def get_effective_chars(url, data, GET, msg,header):
     """根据上下文，然后得到上下文的重要字符，之后将特殊字符放到有效参数中，看看是否能够被找到"""
     for key in msg:  # {'message': [{'positon': (31962, 31968), 'context': 'html'}], 'submit': []}
         logger.run("评估参数:{}".format(key))
@@ -109,22 +112,26 @@ def get_effective_chars(url, data, GET, msg):
             logger.run("评估第{}个输出点".format(i + 1))
             # {'avail_chars': ['.'], 'sore': 1, 'output_zone': '    <!--\n        this is comment\n        dbUfe.D        -->'}
             est_breaker_res = estimate_payload_char(PAYLOAD_CHARS_[msg[key][i]['context']]["breaker"], "breaker", url,
-                                                    data, key, msg[key][i], GET)
+                                                    data, key, msg[key][i], GET,header)
             est_exploiter_res = estimate_payload_char(PAYLOAD_CHARS_[msg[key][i]['context']]["exploiter"], "exploiter",
-                                                      url, data, key, msg[key][i], GET)
+                                                      url, data, key, msg[key][i], GET,header)
+
             msg[key][i].update({'breakers': est_breaker_res["avail_chars"],
                                 "exploiter": est_exploiter_res["avail_chars"],
                                 'sore': est_breaker_res["sore"] + est_exploiter_res["sore"],
                                 "output_zone": est_breaker_res["output_zone"]})
-            logger.info("上下文: {}".format(msg[key][i]["context"]))
-            logger.info("相关html标签: {}".format(msg[key][i]["tag"]))
-            logger.info("相关特殊标记: {}".format(msg[key][i]["sp"]))
-            logger.vuln("breakers得分： {}".format(est_breaker_res["sore"]))
-            logger.info("可用breakers: {}".format(est_breaker_res["avail_chars"]))
-            logger.vuln("exploiter得分： {}".format(est_exploiter_res["sore"]))
-            logger.info("可用exploiter: {}".format(est_exploiter_res["avail_chars"]))
-            logger.info("输出点信息: {}".format(est_breaker_res["output_zone"]))
-            logger.red_line(amount=60)
+            if est_breaker_res["sore"]>=BREAKER_THRESHOLD:
+                logger.info("上下文: {}".format(msg[key][i]["context"]))
+                logger.info("相关html标签: {}".format(msg[key][i]["tag"]))
+                logger.info("相关特殊标记: {}".format(msg[key][i]["sp"]))
+                logger.vuln("breakers得分： {}".format(est_breaker_res["sore"]))
+                logger.info("可用breakers: {}".format(est_breaker_res["avail_chars"]))
+                logger.vuln("exploiter得分： {}".format(est_exploiter_res["sore"]))
+                logger.info("可用exploiter: {}".format(est_exploiter_res["avail_chars"]))
+                logger.info("输出点信息: {}".format(est_breaker_res["output_zone"]))
+                logger.red_line(amount=60)
+
+
         logger.red_line()
 
     # pprint(msg)
